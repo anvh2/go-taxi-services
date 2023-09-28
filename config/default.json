@@ -1,0 +1,14 @@
+{
+  "system": {
+    "database": {
+        "host": "localhost",
+        "port": "5432",
+        "database": "gotaxi",
+        "username": "postgres",
+        "password": ""
+    },
+    "token": {
+      "secret": "secret@gotaxi.com"
+    }
+  }
+}
