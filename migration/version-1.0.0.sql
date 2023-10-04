@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS "customer" (
     "phone" VARCHAR NOT NULL,
     "email" VARCHAR DEFAULT NULL,
     "password" VARCHAR DEFAULT NULL,
+    "verified" BOOLEAN DEFAULT FALSE,
     "avatar" VARCHAR DEFAULT NULL,
     "dob" DATE DEFAULT NULL,
     "account_status" SMALLINT NOT NULL DEFAULT 2, -- ACTIVE = 1; INACTIVE = 2;

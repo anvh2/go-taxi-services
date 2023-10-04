@@ -7,8 +7,25 @@
         "username": "postgres",
         "password": ""
     },
-    "token": {
-      "secret": "secret@gotaxi.com"
+    "redis": {
+      "host": "localhost",
+      "password": "",
+      "port": 6379
+    }
+  },
+  "services": {
+    "user": {
+      "log_path": "./logs",
+      "service_name": "user-management"
+    } 
+  },
+  "common": {
+    "secret": {
+      "authen": "secret@gotaxi.com",
+      "otp": "EmW5kpsR6iBnOwqyoLkFRNuYLxMmjV3b"
+    },
+    "redis": {
+      "otp": "go.taxi.user.otp_token."
     }
   }
 }

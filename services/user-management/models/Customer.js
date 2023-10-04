@@ -10,6 +10,7 @@ const Customer = sequelize.define('Customer', {
   phone: DataTypes.STRING,
   email: DataTypes.STRING,
   password: DataTypes.STRING,
+  verified: DataTypes.BOOLEAN,
   avatar: DataTypes.STRING,
   dob: DataTypes.DATEONLY,
   account_status: DataTypes.SMALLINT,

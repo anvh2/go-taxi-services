@@ -16,7 +16,7 @@ function authenticated (req, res, next) {
       }
     }
 
-    const secretKey = getConfig('system.token.secret');
+    const secretKey = getConfig('common.secret.authen');
     const decoded = jwt.verify(token, secretKey);
     if (!decoded) {
       res.status(401).json({ error: 'Unauthorized' });
