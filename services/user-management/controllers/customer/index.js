@@ -13,9 +13,11 @@ class CustomerController {
     this.login = login.login;
     this.verifyLogin = login.verify;
     this.register = register.register;
+    this.verifyRegister = register.verify;
     this.getProfile = profile.get;
     this.updateProfile = profile.update;
-    this.changePassword = account.changePassword;
+    this.resetPassword = account.resetPassword;
+    this.updatePassword = account.updatePassword;
   }
 }
 

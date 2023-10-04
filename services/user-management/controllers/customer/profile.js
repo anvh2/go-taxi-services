@@ -5,7 +5,7 @@ const { OK, INVALID_PAYLOAD, INTERNAL_SERVER_ERROR, NOT_FOUND, FORBIDDEN } = req
 
 const validator = [
   {
-    id: 'check_customer_id_empty',
+    id: 'check_empty_customer_id',
     func: (request, errors) => {
       const { customer_id } = request.query;
       if (!customer_id || customer_id === '') {
@@ -14,6 +14,12 @@ const validator = [
       } else {
         return true;
       }
+    }
+  },
+  {
+    id: 'check_empty_profile',
+    func: (request, errors) => {
+      return true;
     }
   }
 ];
@@ -28,7 +34,7 @@ class ProfileController {
   async get (req, res) {
     const errors = [];
     for (const rule of validator) {
-      if (rule.id === 'check_customer_id_empty') {
+      if (rule.id === 'check_empty_customer_id') {
         rule.func(req, errors);
       }
     }
@@ -82,7 +88,9 @@ class ProfileController {
   async update (req, res) {
     const errors = [];
     for (const rule of validator) {
-      rule.func(req, errors);
+      if (rule.id === 'check_empty_profile') {
+        rule.func(req, errors);
+      }
     }
 
     if (errors.length > 0) {
@@ -95,11 +103,12 @@ class ProfileController {
       return;
     }
 
-    const { customer_id, full_name, dob, avatar } = req.body;
+    const { full_name, dob, avatar } = req.body;
+    const customer_id = req.payload?.id;
 
     try {
-      const customer = Customer.findOne({
-        where: customer_id
+      const customer = await Customer.findOne({
+        where: { customer_id }
       });
       if (!customer) {
         const error = {
@@ -112,7 +121,7 @@ class ProfileController {
 
       const updated = await Customer.update(
         { full_name, dob, avatar },
-        { where: customer_id }
+        { where: { customer_id } }
       );
       if (!updated) {
         const error = {
@@ -123,7 +132,7 @@ class ProfileController {
         return;
       }
 
-      res.status(OK);
+      res.status(OK).json({ error: { message: 'OK' } });
     } catch (err) {
       logger.error('[Customer][Profile] error ' + err);
       const error = {

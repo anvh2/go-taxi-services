@@ -3,15 +3,30 @@
 /* eslint-disable camelcase */
 const bcrypt = require('bcryptjs');
 const Customer = require('@services/user-management/models/Customer');
-const { OK, INVALID_PAYLOAD, INTERNAL_SERVER_ERROR, NOT_FOUND } = require('@common/constants/codes');
+const { OK, INVALID_PAYLOAD, INTERNAL_SERVER_ERROR, NOT_FOUND, FORBIDDEN } = require('@common/constants/codes');
+const { encrypt, decrypt } = require('@common/utils/crypto');
+const { getConfig } = require('@common/utils/config');
+const { redis } = require('@common/database/redis');
 
 const validator = [
   {
-    id: 'check_password_empty',
+    id: 'check_empty_phone',
     func: (request, errors) => {
-      const { customer_id, password } = request.body;
-      if (!customer_id || customer_id === '') {
-        errors.push('customer_id is empty');
+      const { phone } = request.body;
+      if (!phone || phone === '') {
+        errors.push('phone is empty');
+        return false;
+      } else {
+        return true;
+      }
+    }
+  },
+  {
+    id: 'check_empty_token',
+    func: (request, errors) => {
+      const { token, password } = request.body;
+      if (!token || token === '') {
+        errors.push('token is empty');
         return false;
       } else if (!password || password === '') {
         errors.push('password is empty');
@@ -26,13 +41,14 @@ const validator = [
 class AccountController {
   constructor (logger) {
     this.logger = logger;
-    this.changePassword = this.changePassword.bind(this);
+    this.resetPassword = this.resetPassword.bind(this);
+    this.updatePassword = this.updatePassword.bind(this);
   }
 
-  async changePassword (req, res) {
+  async resetPassword (req, res) {
     const errors = [];
     for (const rule of validator) {
-      if (rule.id === 'check_password_empty') {
+      if (rule.id === 'check_empty_phone') {
         rule.func(req, errors);
       }
     }
@@ -47,40 +63,128 @@ class AccountController {
       return;
     }
 
-    const { customer_id, password } = req.params;
+    const { phone } = req.body;
 
     try {
-      const customer = Customer.findOne({
-        where: customer_id
+      const customer = await Customer.findOne({
+        where: { phone }
       });
-      if (!customer) {
+      if (!customer || !customer.verified) {
         const error = {
           status: NOT_FOUND,
-          message: 'Customer not found'
+          message: 'Customer not found or not register'
         };
         res.status(error.status).json({ error });
         return;
       }
 
+      const token = encrypt(JSON.stringify({ phone, created_time: Date.now() }), getConfig('common.secret.password'));
+      const prefix = getConfig('common.redis.reset_password');
+      await redis.set(`${prefix}${phone}`, JSON.stringify({ token, phone }), 'EX', 10 * 60); // 10 minutes
+
+      const url = `${getConfig('base.url')}/pages/update-password?token=${token}`;
+
+      // TODO: implement send otp to phone or mail here
+      res.status(OK).json({ url, note: 'temporary return' }); // TODO: temporary return to response, user only receives link reset password from phone or mail
+    } catch (err) {
+      this.logger.error('[Customer][Account] error ' + err);
+      const error = {
+        status: INTERNAL_SERVER_ERROR,
+        message: 'Internal server error',
+        details: err
+      };
+      res.status(error.status).json({ error });
+    }
+  }
+
+  async updatePassword (req, res) {
+    const errors = [];
+    for (const rule of validator) {
+      if (rule.id === 'check_empty_token') {
+        rule.func(req, errors);
+      }
+    }
+
+    if (errors.length > 0) {
+      const error = {
+        status: INVALID_PAYLOAD,
+        message: 'Invalid request',
+        details: errors
+      };
+      res.status(error.status).json({ error });
+      return;
+    }
+
+    const { token, password } = req.body;
+
+    try {
+      // Verify token
+      const tokenStr = decrypt(token, getConfig('common.secret.password'));
+      const tokenData = JSON.parse(tokenStr);
+      if (!tokenData || !tokenData.phone) {
+        const error = {
+          status: INVALID_PAYLOAD,
+          message: 'Token invalid'
+        };
+        res.status(error.status).json({ error });
+        return;
+      }
+
+      const prefix = getConfig('common.redis.reset_password');
+      const validTokenStr = await redis.get(`${prefix}${tokenData.phone}`);
+      const validTokenData = JSON.parse(validTokenStr);
+      if (!validTokenData || !validTokenData.token) {
+        const error = {
+          status: INVALID_PAYLOAD,
+          message: 'Token expired'
+        };
+        res.status(error.status).json({ error });
+        return;
+      }
+
+      if (token !== validTokenData.token) {
+        const error = {
+          status: INVALID_PAYLOAD,
+          message: 'Token invalid'
+        };
+        res.status(error.status).json({ error });
+        return;
+      }
+
+      // Verify user
+      const customer = await Customer.findOne({
+        where: { phone: validTokenData.phone }
+      });
+      if (!customer || !customer.verified) {
+        const error = {
+          status: NOT_FOUND,
+          message: 'Customer not found or not register'
+        };
+        res.status(error.status).json({ error });
+        return;
+      }
+
+      // Update password
       const salt = bcrypt.genSaltSync(10);
       const hash = bcrypt.hashSync(password, salt);
 
       const updated = await Customer.update(
         { password: hash },
-        { where: customer_id }
+        { where: { customer_id: customer.customer_id } }
       );
       if (!updated) {
         const error = {
           status: FORBIDDEN,
-          message: 'Change password failed'
+          message: 'Update password failed'
         };
         res.status(error.status).json({ error });
         return;
       }
 
-      res.status(OK);
+      await redis.del(`${prefix}${validTokenData.phone}`);
+      res.status(OK).json({ customer_id: customer.customer_id });
     } catch (err) {
-      logger.error('[Customer][Account] error ' + err);
+      this.logger.error('[Customer][Account] error ' + err);
       const error = {
         status: INTERNAL_SERVER_ERROR,
         message: 'Internal server error',

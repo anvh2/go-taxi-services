@@ -1,15 +1,17 @@
 /* eslint-disable no-undef */
 const jwt = require('jsonwebtoken');
+const { verifyOTP } = require('./verify_otp');
+const { encrypt } = require('@common/utils/crypto');
+const { redis } = require('@common/database/redis');
+const { generateOTP } = require('@common/utils/otp');
 const { getConfig } = require('@common/utils/config');
 const Customer = require('@services/user-management/models/Customer');
 const { OK, INVALID_PAYLOAD, NOT_FOUND, INTERNAL_SERVER_ERROR } = require('@common/constants/codes');
-const { encrypt, decrypt } = require('@common/utils/crypto');
-const { redis } = require('@common/database/redis');
-const { generateOTP } = require('@common/utils/otp');
+const { TokenAction } = require('@common/constants/user');
 
 const validator = [
   {
-    id: 'check_phone',
+    id: 'check_empty_phone',
     func: (request, errors) => {
       const { phone } = request.body;
       if (!phone || phone === '') {
@@ -21,7 +23,7 @@ const validator = [
     }
   },
   {
-    id: 'check_otp',
+    id: 'check_empty_otp',
     func: (request, errors) => {
       const { otp } = request.body;
       if (!otp || otp === '') {
@@ -44,7 +46,7 @@ class LoginController {
   async login (req, res) {
     const errors = [];
     for (const rule of validator) {
-      if (rule.id === 'check_phone') {
+      if (rule.id === 'check_empty_phone') {
         rule.func(req, errors);
       }
     }
@@ -65,13 +67,12 @@ class LoginController {
       const customer = await Customer.findOne({
         where: { phone }
       });
-
-      if (!customer) {
+      if (!customer || !customer.verified) {
         this.logger.error('[Customer][Login] phone not found ' + phone);
-        res.status(NOT_FOUND).json({
+        res.status(error.status).json({
           error: {
             status: NOT_FOUND,
-            message: 'Customer not found'
+            message: 'Customer not found or not verify'
           }
         });
         return;
@@ -79,11 +80,11 @@ class LoginController {
 
       const otp = generateOTP();
       const prefix = getConfig('common.redis.otp');
-      const token = encrypt(otp, getConfig('common.secret.otp'));
+      const token = encrypt(JSON.stringify({ otp, action: TokenAction.Login }), getConfig('common.secret.otp'));
       await redis.set(`${prefix}${phone}`, token, 'EX', 10 * 60); // 10 minutes
 
-      // TODO: implement send otp
-      res.status(OK).json({ otp }); // TODO: temporary return to response
+      // TODO: implement send otp to phone or mail here
+      res.status(OK).json({ otp, note: 'temporary return' }); // TODO: temporary return to response, user only receives otp from phone or mail
     } catch (error) {
       this.logger.error('[Customer][Login] error ' + error);
       res.status(INTERNAL_SERVER_ERROR).json({
@@ -118,38 +119,20 @@ class LoginController {
         where: { phone }
       });
 
-      if (!customer) {
+      if (!customer || !customer.verified) {
         this.logger.error('[Customer][Login] phone not found ' + phone);
-        res.status(NOT_FOUND).json({
-          error: {
-            status: NOT_FOUND,
-            message: 'Customer not found'
-          }
-        });
-        return;
-      }
-      this.logger.info('[Customer][Login] customer ' + customer);
-
-      const prefix = getConfig('common.redis.otp');
-      const otpToken = await redis.get(`${prefix}${phone}`);
-
-      const otpData = decrypt(otpToken, getConfig('common.secret.otp'));
-      if (otp !== otpData.otp) {
         const error = {
-          status: INVALID_PAYLOAD,
-          message: 'OTP invalid'
+          status: NOT_FOUND,
+          message: 'Customer not found'
         };
         res.status(error.status).json({ error });
         return;
       }
+      this.logger.info('[Customer][Login] customer ' + customer);
 
-      const deleted = await redis.del(prefix);
-      if (deleted !== 1) {
-        const error = {
-          status: NOT_FOUND,
-          message: 'OTP not found or expired'
-        };
-        res.status(NOT_FOUND).json({ error });
+      const error = await verifyOTP(phone, otp, TokenAction.Login);
+      if (error) {
+        res.status(error.status).json({ error });
         return;
       }
 

@@ -22,10 +22,15 @@
   "common": {
     "secret": {
       "authen": "secret@gotaxi.com",
-      "otp": "EmW5kpsR6iBnOwqyoLkFRNuYLxMmjV3b"
+      "otp": "EmW5kpsR6iBnOwqyoLkFRNuYLxMmjV3b",
+      "password": "EmW5kpsR6iBnOwqyoLkFRNuYLxMmjV3b"
     },
     "redis": {
-      "otp": "go.taxi.user.otp_token."
+      "otp": "go.taxi.user.otp_token.",
+      "reset_password": "go.taxi.user.reset_password."
     }
+  },
+  "base": {
+    "url": "http://localhost:3000"
   }
 }

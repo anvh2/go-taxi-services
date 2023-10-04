@@ -11,7 +11,7 @@ class CustomerRoutes {
         method: 'PUT',
         path: '/v1/customer/register/verify',
         access: 'public',
-        handler: controller.register
+        handler: controller.verifyRegister
       },
       {
         method: 'POST',
@@ -26,10 +26,16 @@ class CustomerRoutes {
         handler: controller.verifyLogin
       },
       {
+        method: 'POST',
+        path: '/v1/customer/password/reset',
+        access: 'public',
+        handler: controller.resetPassword
+      },
+      {
         method: 'PUT',
-        path: '/v1/customer/change-password',
-        access: 'private',
-        handler: controller.changePassword
+        path: '/v1/customer/password/update',
+        access: 'public',
+        handler: controller.updatePassword
       },
       {
         method: 'GET',

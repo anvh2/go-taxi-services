@@ -21,5 +21,16 @@ function decrypt (data, secret) {
   return decrypted;
 }
 
-module.exports.encrypt = encrypt;
-module.exports.decrypt = decrypt;
+function randomHash (size) {
+  // Generate a random token using crypto module
+  const token = crypto.randomBytes(size).toString('hex');
+  // Hash the token for security
+  const hash = crypto.createHash('sha256').update(token).digest('hex');
+  return hash;
+}
+
+module.exports = {
+  encrypt,
+  decrypt,
+  randomHash
+};

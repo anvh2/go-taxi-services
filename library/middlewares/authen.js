@@ -28,6 +28,7 @@ function authenticated (req, res, next) {
       return;
     }
 
+    req.payload = decoded;
     next();
   } catch (error) {
     res.status(401).json({ error: 'Unauthorized' });

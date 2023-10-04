@@ -4,7 +4,9 @@ const { sequelize } = require('@common/database/postgres');
 const Customer = sequelize.define('Customer', {
   customer_id: {
     type: DataTypes.INTEGER,
-    primaryKey: true
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false
   },
   full_name: DataTypes.STRING,
   phone: DataTypes.STRING,

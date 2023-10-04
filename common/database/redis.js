@@ -8,4 +8,3 @@ const redis = new Redis({
 });
 
 module.exports.redis = redis;
-// module.exports.closeRedis = redis.quit();
