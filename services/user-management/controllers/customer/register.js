@@ -83,7 +83,7 @@ class RegisterController {
 
       const otp = generateOTP();
       const prefix = getConfig('common.redis.otp');
-      const token = encrypt(JSON.stringify({ otp, action: TokenAction.Register }), getConfig('common.secret.otp'));
+      const token = encrypt(JSON.stringify({ otp, action: TokenAction.Register, created_time: Date.now() }), getConfig('common.secret.otp'));
       await redis.set(`${prefix}${phone}`, token, 'EX', 10 * 60); // 10 minutes
 
       // TODO: implement send otp to phone or mail here

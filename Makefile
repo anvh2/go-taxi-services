@@ -5,7 +5,7 @@ login:
 	curl -d '{"phone":"0123456789"}' -H "Content-Type: application/json" -X POST http://localhost:3000/v1/customer/login
 
 loginverify:
-	curl -d '{"phone":"0123456789", "otp":"287332"}' -H "Content-Type: application/json" -X PUT http://localhost:3000/v1/customer/login/verify
+	curl -d '{"phone":"0123456789", "otp":"375832"}' -H "Content-Type: application/json" -X PUT http://localhost:3000/v1/customer/login/verify
 
 register: 
 	curl -d '{"full_name":"Nguyen Van Ca","email":"canguyen@gmail.com","phone":"0121457698"}' -H "Content-Type: application/json" -X POST http://localhost:3000/v1/customer/register
