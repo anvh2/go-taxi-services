@@ -6,8 +6,9 @@ const { redis } = require('@common/database/redis');
 const { generateOTP } = require('@common/utils/otp');
 const { getConfig } = require('@common/utils/config');
 const Customer = require('@services/user-management/models/Customer');
-const { OK, INVALID_PAYLOAD, NOT_FOUND, INTERNAL_SERVER_ERROR } = require('@common/constants/codes');
+const { OK, NOT_FOUND, INTERNAL_SERVER_ERROR } = require('@common/constants/codes');
 const { TokenAction } = require('@common/constants/user');
+const { validate } = require('@common/validator/validator');
 
 const validator = [
   {
@@ -44,19 +45,8 @@ class LoginController {
   }
 
   async login (req, res) {
-    const errors = [];
-    for (const rule of validator) {
-      if (rule.id === 'check_empty_phone') {
-        rule.func(req, errors);
-      }
-    }
-
-    if (errors.length > 0) {
-      const error = {
-        status: INVALID_PAYLOAD,
-        message: 'Invalid request',
-        details: errors
-      };
+    const error = validate(req, validator, ['check_empty_phone']);
+    if (error) {
       res.status(error.status).json({ error });
       return;
     }
@@ -97,17 +87,8 @@ class LoginController {
   }
 
   async verify (req, res) {
-    const errors = [];
-    for (const rule of validator) {
-      rule.func(req, errors);
-    }
-
-    if (errors.length > 0) {
-      const error = {
-        status: INVALID_PAYLOAD,
-        message: 'Invalid request',
-        details: errors
-      };
+    const error = validate(req, validator, []);
+    if (error) {
       res.status(error.status).json({ error });
       return;
     }

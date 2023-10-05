@@ -8,6 +8,7 @@ const { getConfig } = require('@common/utils/config');
 const { TokenAction } = require('@common/constants/user');
 const Customer = require('@services/user-management/models/Customer');
 const { OK, INVALID_PAYLOAD, INTERNAL_SERVER_ERROR } = require('@common/constants/codes');
+const { validate } = require('@common/validator/validator');
 
 const validator = [
   {
@@ -53,19 +54,8 @@ class RegisterController {
   }
 
   async register (req, res) {
-    const errors = [];
-    for (const rule of validator) {
-      if (rule.id === 'check_empty_info') {
-        rule.func(req, errors);
-      }
-    }
-
-    if (errors.length > 0) {
-      const error = {
-        status: INVALID_PAYLOAD,
-        message: 'Invalid request',
-        details: errors
-      };
+    const error = validate(req, validator, ['check_empty_info']);
+    if (error) {
       res.status(error.status).json({ error });
       return;
     }
@@ -110,19 +100,8 @@ class RegisterController {
   }
 
   async verify (req, res) {
-    const errors = [];
-    for (const rule of validator) {
-      if (rule.id === 'check_empty_otp') {
-        rule.func(req, errors);
-      }
-    }
-
-    if (errors.length > 0) {
-      const error = {
-        status: INVALID_PAYLOAD,
-        message: 'Invalid request',
-        details: errors
-      };
+    const error = validate(req, validator, ['check_empty_otp']);
+    if (error) {
       res.status(error.status).json({ error });
       return;
     }

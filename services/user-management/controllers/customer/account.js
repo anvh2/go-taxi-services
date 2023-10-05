@@ -7,6 +7,7 @@ const { OK, INVALID_PAYLOAD, INTERNAL_SERVER_ERROR, NOT_FOUND, FORBIDDEN } = req
 const { encrypt, decrypt } = require('@common/utils/crypto');
 const { getConfig } = require('@common/utils/config');
 const { redis } = require('@common/database/redis');
+const { validate } = require('@common/validator/validator');
 
 const validator = [
   {
@@ -46,19 +47,8 @@ class AccountController {
   }
 
   async resetPassword (req, res) {
-    const errors = [];
-    for (const rule of validator) {
-      if (rule.id === 'check_empty_phone') {
-        rule.func(req, errors);
-      }
-    }
-
-    if (errors.length > 0) {
-      const error = {
-        status: INVALID_PAYLOAD,
-        message: 'Invalid request',
-        details: errors
-      };
+    const error = validate(req, validator, ['check_empty_phone']);
+    if (error) {
       res.status(error.status).json({ error });
       return;
     }
@@ -98,19 +88,8 @@ class AccountController {
   }
 
   async updatePassword (req, res) {
-    const errors = [];
-    for (const rule of validator) {
-      if (rule.id === 'check_empty_token') {
-        rule.func(req, errors);
-      }
-    }
-
-    if (errors.length > 0) {
-      const error = {
-        status: INVALID_PAYLOAD,
-        message: 'Invalid request',
-        details: errors
-      };
+    const error = validate(req, validator, ['check_empty_token']);
+    if (error) {
       res.status(error.status).json({ error });
       return;
     }
