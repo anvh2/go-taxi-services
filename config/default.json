@@ -17,6 +17,13 @@
     "user": {
       "log_path": "./logs",
       "service_name": "user-management"
+    },"booking": {
+      "log_path": "./logs",
+      "service_name": "booking-service"
+    },
+    "promotion": {
+      "log_path": "./logs",
+      "service_name": "promotion-service"
     } 
   },
   "common": {

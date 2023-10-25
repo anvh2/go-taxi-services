@@ -2,6 +2,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const express = require('express');
 const bodyParser = require('body-parser');
+const { queryParser } = require('express-query-parser');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const authenticated = require('@library/middlewares/authen');
@@ -22,6 +23,17 @@ class Server {
     // Body parsing middleware
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
+
+    // Query parsing middleware
+    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(
+      queryParser({
+        parseNull: true,
+        parseUndefined: true,
+        parseBoolean: true,
+        parseNumber: true
+      })
+    );
 
     // Helmet middleware for enhanced security
     this.app.use(helmet());

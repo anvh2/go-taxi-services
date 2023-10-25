@@ -13,4 +13,4 @@ const customerController = new CustomerController(logger);
 const customerRoutes = new CustomerRoutes(customerController);
 
 server.addRoutes(customerRoutes.resolve());
-server.start(3000);
+server.start(8080);

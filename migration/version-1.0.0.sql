@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS "booking" (
     "booking_id" INT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) PRIMARY KEY,
     "uuid" UUID NOT NULL DEFAULT gen_random_uuid (),
     "customer_id" INT NOT NULL,
-    "driver_id" INT NOT NULL,
+    "driver_id" INT DEFAULT NULL,
     "call_center_id" INT DEFAULT NULL,
     "pickup_address_id" INT NOT NULL,
     "destination_address_id" INT NOT NULL,

@@ -12,4 +12,13 @@ const sequelize = new Sequelize(
   }
 );
 
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database authenticate success');
+  } catch (error) {
+    console.error('Database authenticate error', error);
+  }
+})();
+
 module.exports.sequelize = sequelize;
