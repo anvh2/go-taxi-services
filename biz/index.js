@@ -29,28 +29,28 @@ module.exports = {
   ],
   VehicleTypes: [
     {
-      type: 'motorbike',
+      type: 'MOTOBIKE',
       name: 'Xe Máy',
       active: true
     },
     {
-      type: 'motorbikePlus',
+      type: 'MOTOBIKE_PLUS',
       name: 'Xe Máy Tốt',
       active: true
     },
     {
-      type: 'compactCar',
+      type: 'COMPACT_CAR',
       name: 'Ô tô 4 chỗ',
       active: true
     },
     {
-      type: 'stylishCar',
+      type: 'STYLISH_CAR',
       name: 'Ô tô 7 chỗ',
       active: true
     }
   ],
   FareRules: {
-    motorbike: {
+    MOTOBIKE: {
       baseFare: 10000,
       distanceRate: 5000,
       timeRate: [
@@ -68,7 +68,7 @@ module.exports = {
         sunny: 0
       }
     },
-    motorbikePlus: {
+    MOTOBIKE_PLUS: {
       baseFare: 10000,
       distanceRate: 6000,
       timeRate: [
@@ -86,7 +86,7 @@ module.exports = {
         sunny: 0
       }
     },
-    compactCar: {
+    COMPACT_CAR: {
       baseFare: 15000,
       distanceRate: 11000,
       timeRate: [
@@ -104,7 +104,7 @@ module.exports = {
         sunny: 0
       }
     },
-    stylishCar: {
+    STYLISH_CAR: {
       baseFare: 20000,
       distanceRate: 15000,
       timeRate: [
